@@ -54,6 +54,7 @@ static uint32_t last_color;
 #define KEYBOARD_GPIO_PIN		GPIO_NUM_9
 
 static bool led_on;
+static bool config_mode;
 
 static void app_show_info(void)
 {
@@ -86,10 +87,7 @@ static int app_led_request(char *buffer, int buf_offs, int vaild_size, int buff_
 		ESP_LOGI(TAG, "Set color: #%06x", (unsigned int)rgb);
 		/* Set return (2byte) */
 		buffer[buf_offs + 1] = LED_RESULT_OK;
-		if (rgb)
-			led_on = false;
-		else
-			led_on = true;
+		led_on = (bool)!!rgb;
 		return 2;
 	} else if (buffer[buf_offs] == LED_CMD_GET_COLOR && vaild_size == 1) {
 		ESP_LOGI(TAG, "Get color: #%06x", (unsigned int)last_color);
@@ -105,28 +103,6 @@ static int app_led_request(char *buffer, int buf_offs, int vaild_size, int buff_
 	}
 
 	return 0;
-}
-
-static uint8_t pick_index;
-
-static uint32_t app_get_color(bool next)
-{
-	static const uint32_t colors[] = {
-		0xffffff, 0xff4e00, 0xff1123,
-		0xec05ff, 0x00d3ff, 0x00ff2e,
-		0xff3588, 0xb981ff, 0x67ffa3,
-	};
-
-	uint32_t color;
-
-	if (next)
-		pick_index++;
-	color = colors[pick_index];
-	ESP_LOGD(TAG, "[%d]: %06X", (int)pick_index, (int)color);
-
-	pick_index %= sizeof(colors) / sizeof(colors[0]);
-
-	return color;
 }
 
 static void app_led_notify(uint32_t color)
@@ -150,16 +126,16 @@ static bool app_event_notify_callback(struct event_bus_msg *msg)
 	case EVENT_BUS_START_SMART_CONFIG:
 		break;
 	case EVENT_BUS_STOP_SMART_CONFIG:
-		led_on = true;
+		config_mode = false;
 		break;
 	case EVENT_BUS_KEYBOARD:
-		if (msg->param1 != KEYBOARD_GPIO_PIN)
+		if (config_mode || msg->param1 != KEYBOARD_GPIO_PIN)
 			break;
 		if ((msg->param2 == KEYBOARD_EVENT_SHORT_RELEASE)) {
 			if (led_on == false) {
 				/* Turn on */
 				led_on = true;
-				led_effects_play(LED_EFFECTS_COLOR_FILL, app_get_color(false));
+				led_effects_play(LED_EFFECTS_ALL_ON, 0);
 				ESP_LOGI(TAG, "Turn on");
 			} else {
 				/* Turn off */
@@ -172,6 +148,8 @@ static bool app_event_notify_callback(struct event_bus_msg *msg)
 		if (msg->param2 == KEYBOARD_EVENT_LONG_RELEASE) {
 			ESP_LOGI(TAG, "Smart config");
 			wifi_smartconfig();
+			led_on = false;
+			config_mode = true;
 		}
 		break;
 	case EVENT_BUS_LED_COLOR_UPDATED:
@@ -209,8 +187,8 @@ extern "C" void app_main(void)
 
 	/* Network ctrl */
 	simple_ctrl_init();
-	simple_ctrl_set_name("VOICE LED");
-	simple_ctrl_set_class_id(CLASS_ID_VOICE_LED);
+	simple_ctrl_set_name("BUTTON LED");
+	simple_ctrl_set_class_id(CLASS_ID_BUTTON_LED);
 	simple_ctrl_request_register(app_led_request);
 	wifi_connect();
 
