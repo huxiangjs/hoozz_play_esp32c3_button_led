@@ -38,7 +38,7 @@
 #include "wifi.h"
 #include "event_bus.h"
 #include "simple_ctrl.h"
-#include "spiffs.h"
+#include "store.h"
 #include "keyboard.h"
 
 static const char *TAG = "APP-MAIN";
@@ -169,7 +169,7 @@ extern "C" void app_main(void)
 	app_show_info();
 	ESP_ERROR_CHECK(nvs_flash_init());
 
-	spiffs_init();
+	store_init();
 
 	/* Event bus */
 	event_bus_init();
