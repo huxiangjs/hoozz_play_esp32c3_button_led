@@ -3,6 +3,8 @@ A low-cost button LED.
 
 This is a sub-repository, and the main repository is located at [Hoozz Play](https://github.com/huxiangjs/hoozz_play)
 
+[![ESP32 CI](https://github.com/huxiangjs/hoozz_play_esp32c3_button_led/actions/workflows/esp32.yml/badge.svg)](https://github.com/huxiangjs/hoozz_play_esp32c3_button_led/actions/workflows/esp32.yml)
+
 ## Basic environment
 MCU:
 ```
