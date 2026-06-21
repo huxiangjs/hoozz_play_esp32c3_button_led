@@ -27,3 +27,22 @@ cd MCU/
 idf.py build && idf.py flash
 ```
 
+## You can also directly burn the released bin file
+
+1. Download the latest release zip package from the Releases column
+2. Unzip the zip and you will see the following files:
+   ```
+   $ tree
+   .
+   |-- bootloader
+   |   `-- bootloader.bin
+   |-- flash_args
+   |-- partition_table
+   |   `-- partition-table.bin
+   `-- voice_led.bin
+
+   2 directories, 4 files
+   ```
+3. Open the latest official download tool `flash_download_tool` (official download address: [other-tools](https://www.espressif.com/en/support/download/other-tools))
+4. Use the following options: (1) `Chip Type [ESP32-C3]`; (2) `WorkMode [Develop]`; (3) `LoadMode [USB]`;
+5. According to the content of the `flash_args` file, configure the burning file, address and flash type. Keep the default selection for places not mentioned, and finally click **Start** to burn
