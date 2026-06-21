@@ -95,5 +95,5 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: esp32-build/MCU/build/release.zip
-        asset_name: ${{ github.event.repository.name }}_${{ github.ref_name }}.apk
+        asset_name: ${{ github.event.repository.name }}_${{ github.ref_name }}.zip
         asset_content_type: application/zip
