@@ -1,0 +1,55 @@
+name: ESP32 CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    # Checkout the repository to the GitHub Actions runner
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        path: esp32-build
+        fetch-depth: 1
+
+    # Get ESP-IDF
+    - name: Get ESP-IDF
+      uses: actions/checkout@v4
+      with:
+        repository: espressif/esp-idf
+        ref: release/v5.2
+        fetch-depth: 1
+        path: esp-idf
+
+    # Cache ESP-IDF
+    - name: Cache ESP-IDF
+      uses: actions/cache@v3
+      with:
+        path: |
+          esp-idf
+          ~/.espressif
+        key: ${{ runner.os }}-esp-idf-${{ hashFiles('esp-idf/.git/refs/heads/release/v5.2') }}
+        restore-keys: |
+          ${{ runner.os }}-esp-idf-
+
+    # Install ESP-IDF
+    - name: Install ESP-IDF
+      run: |
+        cd esp-idf/
+        ./install.sh
+
+    # Run ESP32 build command
+    - name: Build
+      run: |
+        cd esp-idf/
+        . ./export.sh
+        cd -
+        cd esp32-build/MCU
+        idf.py build
