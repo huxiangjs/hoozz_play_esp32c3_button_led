@@ -28,57 +28,32 @@ jobs:
       run: sudo apt-get install -y jq
 
     # Get ESP-IDF
+    # Pinned to the exact commit of the release/v5.2 branch (v5.2.1-76) that
+    # the committed MCU/sdkconfig was generated with. The branch keeps moving
+    # (new 5.2.x backports), and a different IDF version rewrites the
+    # sdkconfig at build time, which would mark the firmware -dirty.
     - name: Get ESP-IDF
       uses: actions/checkout@v4
       with:
         repository: espressif/esp-idf
-        ref: release/v5.2
+        ref: bf17be96b46bd5ab81582e75fa4a8c682841b649
         fetch-depth: 1
         path: esp-idf
 
-    # Cache ESP-IDF
+    # Cache ESP-IDF (fixed key: the pinned IDF never changes)
     - name: Cache ESP-IDF
       uses: actions/cache@v3
       with:
         path: |
           esp-idf
           ~/.espressif
-        key: ${{ runner.os }}-esp-idf-${{ hashFiles('esp-idf/.git/refs/heads/release/v5.2') }}
-        restore-keys: |
-          ${{ runner.os }}-esp-idf-
+        key: ${{ runner.os }}-esp-idf-v5.2.1-76-gbf17be96b4
 
     # Install ESP-IDF
     - name: Install ESP-IDF
       run: |
         cd esp-idf/
         ./install.sh
-
-    # Debug: what makes the tree dirty in CI? (temporary)
-    - name: Debug git state (before build)
-      run: |
-        cd esp32-build
-        echo "=== git version ==="
-        git --version
-        echo "=== eol/mode git config (all scopes) ==="
-        git config --show-origin --list | grep -iE "autocrlf|core\.eol|core\.filemode|safedirectory" || echo "(none)"
-        echo "=== git status (repo root) ==="
-        git status
-        echo "=== git status --porcelain (repo root) ==="
-        git status --porcelain; echo "[end]"
-        echo "=== git status --porcelain (MCU/main) ==="
-        git -C MCU/main status --porcelain; echo "[end]"
-        echo "=== untracked (repo root) ==="
-        git ls-files --others --exclude-standard; echo "[end]"
-        echo "=== diff (repo root) ==="
-        git diff; echo "[end]"
-        echo "=== submodule status ==="
-        git submodule status
-        echo "=== files on disk under MCU (maxdepth 1) ==="
-        find MCU -maxdepth 1 -type f | sort; echo "[end]"
-        echo "=== files on disk under MCU/main (excluding submodule) ==="
-        find MCU/main -maxdepth 1 -type f | sort; echo "[end]"
-        echo "=== entries under MCU/main/esp32-common (top level) ==="
-        find MCU/main/esp32-common -maxdepth 1 | sort; echo "[end]"
 
     # Run ESP32 build command
     - name: Build
