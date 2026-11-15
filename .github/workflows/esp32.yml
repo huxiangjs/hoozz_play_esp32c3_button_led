@@ -53,6 +53,33 @@ jobs:
         cd esp-idf/
         ./install.sh
 
+    # Debug: what makes the tree dirty in CI? (temporary)
+    - name: Debug git state (before build)
+      run: |
+        cd esp32-build
+        echo "=== git version ==="
+        git --version
+        echo "=== eol/mode git config (all scopes) ==="
+        git config --show-origin --list | grep -iE "autocrlf|core\.eol|core\.filemode|safedirectory" || echo "(none)"
+        echo "=== git status (repo root) ==="
+        git status
+        echo "=== git status --porcelain (repo root) ==="
+        git status --porcelain; echo "[end]"
+        echo "=== git status --porcelain (MCU/main) ==="
+        git -C MCU/main status --porcelain; echo "[end]"
+        echo "=== untracked (repo root) ==="
+        git ls-files --others --exclude-standard; echo "[end]"
+        echo "=== diff (repo root) ==="
+        git diff; echo "[end]"
+        echo "=== submodule status ==="
+        git submodule status
+        echo "=== files on disk under MCU (maxdepth 1) ==="
+        find MCU -maxdepth 1 -type f | sort; echo "[end]"
+        echo "=== files on disk under MCU/main (excluding submodule) ==="
+        find MCU/main -maxdepth 1 -type f | sort; echo "[end]"
+        echo "=== entries under MCU/main/esp32-common (top level) ==="
+        find MCU/main/esp32-common -maxdepth 1 | sort; echo "[end]"
+
     # Run ESP32 build command
     - name: Build
       run: |
@@ -70,6 +97,19 @@ jobs:
         # it from the release zip to pick the firmware image)
         echo "$project_name.bin" > ota_file
         zip release.zip bootloader/bootloader.bin flash_args partition_table/partition-table.bin ota_data_initial.bin ota_file $project_name.bin
+
+    # Debug: what makes the tree dirty in CI? (temporary)
+    - name: Debug git state (after build)
+      run: |
+        cd esp32-build
+        echo "=== git status --porcelain (repo root) ==="
+        git status --porcelain; echo "[end]"
+        echo "=== git status --porcelain (MCU/main) ==="
+        git -C MCU/main status --porcelain; echo "[end]"
+        echo "=== sdkconfig diff ==="
+        git diff MCU/sdkconfig | head -40; echo "[end]"
+        echo "=== git_version.h (what got embedded) ==="
+        cat MCU/build/include/git_version.h || echo "(missing)"
 
     # Check tag
     - name: Check if the event is a tag push
