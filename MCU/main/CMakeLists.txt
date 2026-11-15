@@ -1,3 +1,13 @@
+# The C3 hardware AES backend in esp32-common/tcp_crypto.c uses the
+# IDF's mbedtls port (aes/esp_aes.h) and its hal types (hal/aes_types.h)
+set(tcp_crypto_aes_inc "")
+if(CONFIG_IDF_TARGET_ESP32C3)
+	string(REPLACE "\\" "/" tcp_crypto_idf_path "$ENV{IDF_PATH}")
+	set(tcp_crypto_aes_inc
+		"${tcp_crypto_idf_path}/components/mbedtls/port/include"
+		"${tcp_crypto_idf_path}/components/hal/include")
+endif()
+
 idf_component_register(
 	SRCS
 		"esp32-common/led_strip_encoder.c"
@@ -17,6 +27,7 @@ idf_component_register(
         INCLUDE_DIRS
 		"."
 		"esp32-common"
+		${tcp_crypto_aes_inc}
 )
 
 add_definitions(
