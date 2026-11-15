@@ -8,14 +8,15 @@ idf_component_register(
 		"esp32-common/crypto.c"
 		"esp32-common/store.c"
 		"esp32-common/keyboard.c"
-		"tiny-AES-c/aes.c"
+		"esp32-common/ota.c"
+		"esp32-common/tcp_crypto.c"
+		"esp32-common/tiny-AES-c/aes.c"
 		"main.cpp"
 		"led_effects.c"
 
         INCLUDE_DIRS
 		"."
 		"esp32-common"
-		"tiny-AES-c"
 )
 
 add_definitions(
