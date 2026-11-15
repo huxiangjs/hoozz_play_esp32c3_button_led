@@ -40,6 +40,9 @@
 #include "simple_ctrl.h"
 #include "store.h"
 #include "keyboard.h"
+#include "ota.h"
+#include "ota_flash.h"
+#include "git_version.h"
 
 static const char *TAG = "APP-MAIN";
 
@@ -55,6 +58,11 @@ static uint32_t last_color;
 
 static bool led_on;
 static bool config_mode;
+
+/* The OTA transports this device supports (url scheme -> callbacks). */
+static const struct ota_transport ota_transports[] = {
+	{ "hoozz", hoozz_ota_open, hoozz_ota_size, hoozz_ota_read, hoozz_ota_close },
+};
 
 static void app_show_info(void)
 {
@@ -168,6 +176,12 @@ extern "C" void app_main(void)
 
 	app_show_info();
 	ESP_ERROR_CHECK(nvs_flash_init());
+
+	/* Enable OTA (after NVS: the ESP-IDF flash backend's first-boot
+	 * validation stores its state there) */
+	simple_ctrl_ota_enable(APP_GIT_SHA APP_GIT_DIRTY, ota_transports,
+			sizeof(ota_transports) / sizeof(ota_transports[0]),
+			&esp_idf_ota_flash, NULL);
 
 	store_init();
 
